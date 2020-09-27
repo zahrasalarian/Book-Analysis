@@ -5,21 +5,21 @@ library(magrittr)
 library(ggplot2)
 library(dplyr)
 
-#to_download <- gutenberg_metadata%>%
-#  filter((author == "Dickens, Charles")&(!is.na(gutenberg_bookshelf))&has_text&(language == "en"))
-#book_id<- as.vector(unlist(to_download$gutenberg_id))
-#books_tbl <- gutenberg_download(book_id, meta_fields = "title")
+to_download <- gutenberg_metadata%>%
+  filter((author == "Dickens, Charles")&(!is.na(gutenberg_bookshelf))&has_text&(language == "en"))
+book_id<- as.vector(unlist(to_download$gutenberg_id))
+books_tbl <- gutenberg_download(book_id, meta_fields = "title")
 
 # download all books from Charles Dickens
 #dickes <- gutenberg_works(author == "Dickens, Charles") %>%
 #  gutenberg_download(meta_fields = "title")
-aliceref <-gutenberg_works(title == "Alice's Adventures in Wonderland")
-alice <- gutenberg_download(aliceref$gutenberg_id) %>% gutenberg_strip()
-tidytext <- data_frame(line = 1:nrow(alice), text = alice$text) %>%
+#aliceref <-gutenberg_works(title == "A Christmas Carol")
+#books_tbl <- gutenberg_download(aliceref$gutenberg_id) %>% gutenberg_strip()
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
   unnest_tokens(word, text) %>%
   anti_join(stop_words) %>%
   count(word, sort = TRUE)
-tidytext<-head(tidytext,10)
+tidytext<-head(tidytext,20)
 ggplot(tidytext,aes(x=word, y=n))+
 geom_bar(stat="identity", fill="red")
   #geom_bar(height=head(tidytext,10)$n, names.arg=head(tidytext,10)$word, xlab="Mots", ylab="Fréquence", col="#973232", main="Alice in Wonderland")
