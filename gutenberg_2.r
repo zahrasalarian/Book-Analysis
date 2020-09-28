@@ -38,11 +38,17 @@ words<-tidytext_word[[2]]
 names_table <-unique(names[!str_to_lower(names)%in%words])
 #delete some words manually
 names_table<-as_tibble(names_table [! names_table %in% c("Mr","Mrs","He","She",
-                                                "The","But","It","And","You","We","My")])
+                                                "The","But","It","And","You","We","My","What","No")])
 names(names_table)<-"word"
 names_table<-inner_join(x = tidytext_name, y = names_table, by = "word")
 names(names_table)[1]<-"title_of_book"
-names_table <- names_table[order(names_table$title_of_book,names_table$n),]
+names_table <- names_table[order(names_table$title_of_book,-names_table$n),]
 names_table<-names_table%>%
   group_by(title_of_book) %>%
   top_n(n = 5)
+ggplot(names_table,
+       aes(y = word,x=n,
+           fill = title_of_book
+       )) +
+  geom_bar(stat = "identity")+
+  scale_y_discrete(guide=guide_axis(n.dodge=2))
