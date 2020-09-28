@@ -43,24 +43,4 @@ library(wordcloud2)
 #figPath = system.file("dickens.jpg",package = "wordcloud2")
 tidytext_cloud<-head(tidytext,200)
 #tidytext_cloud['n'] <- sqrt(tidytext_cloud['n'])
-wordcloud2(data = tidytext_cloud, size = 1.5,color='random-light', backgroundColor="black")
-
-#characters name
-#tidytext_2 <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text, title=books_tbl$title) %>%
-#  unnest_tokens(word, text) %>%
-#  anti_join(stop_words)%>%
-#  group_by(title)%>%
-# count(word, sort = TRUE)
-
-#tidytext_3<-tidytext_2%>%
-#  filter(str_detect(word,"[A-Z][a-z]+"))
-#tidytext_4<-tidytext_2%>%
-#  filter(str_detect(word,"[A-Za-z]+"))
-
-#names <-names[!str_to_lower(names)%in%words]
-
-#tidytext_2<- tidytext_2%>%
-#  group_by(title,word)%>%
-# mutate(n_word = n())
-#tidytext_2<- distinct(tidytext_2)
-#count(word, sort = TRUE)
+wordcloud2(data = tidytext_cloud,figPath="C:/Users/Zahra Salarian/Documents/R/4/Love.jpg", size = 1.5,color='random-light', backgroundColor="black")
