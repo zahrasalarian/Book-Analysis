@@ -22,8 +22,15 @@ tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
   unnest_tokens(word, text) %>%
   anti_join(stop_words)
 tidytext$id <- seq.int(nrow(tidytext))
-#n<- 200
-#pieces <- split(tidytext, rep(1:n, length.out=nr))
-#pieces<-tidytext[, parallel_operation(.SD), by = parallel.id] 
 tidytext$group <- as.numeric(cut(tidytext$id, 200))
-#bing <- get_sentiments("bing")
+bing <- get_sentiments("bing")
+pos_neg <-tidytext %>%
+  inner_join(get_sentiments("bing")) %>%
+  group_by(group)%>%
+  count(sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+ggplot(pos_neg, aes(group, sentiment, fill = group)) +
+  geom_bar(stat = "identity", show.legend = FALSE)+ 
+  theme_minimal()
