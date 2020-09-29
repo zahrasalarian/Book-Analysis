@@ -1,0 +1,5 @@
+#install.packages('sf')
+devtools::install_github("tylermorganwall/rayshader")
+library(lubridate)
+library(ggplot2)
+earthquake <- read.csv(file = 'C:/Users/Zahra Salarian/Documents/R/4/iran.csv')

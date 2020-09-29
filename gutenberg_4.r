@@ -17,11 +17,8 @@ for(book in books){
   books_id<-c(id,books_id)
 }
 books_tbl <- gutenberg_download(books_id,meta_fields = "title") 
-#divide into 200 pieces
 tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
   unnest_tokens(word, text)
-  #anti_join(stop_words)
-#tidytext[1]<-NULL  
 
 #verbs for women
 women <- tidytext%>%
