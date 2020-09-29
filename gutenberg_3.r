@@ -29,8 +29,13 @@ pos_neg <-tidytext %>%
   group_by(group)%>%
   count(sentiment) %>%
   spread(sentiment, n, fill = 0) %>%
-  mutate(sentiment = positive - negative)
+  mutate(sentiment = positive - negative,
+         negneg=-negative)
+  
 
-ggplot(pos_neg, aes(group, sentiment, fill = group)) +
-  geom_bar(stat = "identity", show.legend = FALSE)+ 
+ggplot(pos_neg, aes(x=group)) +
+  geom_bar(stat = "identity",aes(y=positive,fill="positive"))+
+  geom_bar(stat = "identity",aes(y=negneg,fill="negative"))+
+  geom_bar(stat = "identity",aes(y=sentiment,fill="sentiment"))+
+  scale_fill_manual(values = c("#c6d7eb","#fbcbc9","#322514"))
   theme_minimal()
