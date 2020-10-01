@@ -33,8 +33,10 @@ tidytext<-tidytext%>%
 
 #tidytext['n'] <- sqrt(tidytext['n'])
 tidytext_bar<-head(tidytext,20)
+#draw plot
 ggplot(tidytext_bar,aes(x=word, y=n))+
-  geom_bar(stat="identity")
+  geom_bar(stat="identity",fill="#fbcbc9")+
+  geom_label(aes(label = word))
 
 #wordcloud
 library(devtools) 
@@ -43,4 +45,9 @@ library(wordcloud2)
 #figPath = system.file("dickens.jpg",package = "wordcloud2")
 tidytext_cloud<-head(tidytext,200)
 #tidytext_cloud['n'] <- sqrt(tidytext_cloud['n'])
-wordcloud2(data = tidytext_cloud,figPath="C:/Users/Zahra Salarian/Documents/R/4/Love.jpg", size = 1.5,color='random-light', backgroundColor="black")
+figPath = system.file('examples/t.png', package = 'wordcloud2')
+#simple wordcloud
+wordcloud2(data = tidytext_cloud, size = ,color='random-dark')
+
+#wordcloud with pic(it didn't work on my system but i put the code here)
+#wordcloud2(data = tidytext_cloud,figPath=figPath, size = ,color='random-dark')

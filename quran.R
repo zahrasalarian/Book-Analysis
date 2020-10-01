@@ -13,9 +13,3 @@ words<-tidytext%>%
   group_by(word)%>%
   mutate(num = n())
 words <- unique(words[order(-words$num),])
-
-#number of angles==devils
-#angel_num<-tidytext[which(word=='بسم')]
-#sr<-quran_ar_min %>%
-#  group_by(surah_title_ar) %>%
-#  summarize(total_ayaat = n())

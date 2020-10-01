@@ -1,16 +1,13 @@
 #install.packages("gutenbergr")
 library("gutenbergr")
-library(tidytext)
-library(magrittr)
-library(ggplot2)
-library(dplyr)
-library(stringr)
-require(tidyr)
-books <- c("Les Misérables, v. 1/5: Fantine",
-           "Les Misérables, v. 2/5: Cosette",
-           "Les Misérables, v. 3/5: Marius",
-           "Les Misérables, v. 4/5: The Idyll and the Epic",
-           "Les Misérables, v. 5/5: Jean Valjean")
+books <- c("The Pickwick Papers","Oliver Twist",
+           "Nicholas Nickleby","The Old Curiosity Shop",
+           "Barnaby Rudge","Martin Chuzzlewit",
+           "Dombey and Son","David Copperfield",
+           "Bleak House","Hard Times",
+           "Little Dorrit","A Tale of Two Cities",
+           "Great Expectations","Our Mutual Friend",
+           "The Mystery of Edwin Drood")
 books_id = c()
 for(book in books){
   id <-gutenberg_works(title == book)[[1]]

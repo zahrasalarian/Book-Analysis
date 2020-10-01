@@ -1,0 +1,395 @@
+---
+title: "Books"
+author: "Zahra Salarian"
+date: "9/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r 1}
+#install.packages("gutenbergr")
+library("gutenbergr")
+library(tidytext)
+library(magrittr)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(tidyr)
+library(stringr)
+
+# download all books from Charles Dickens
+books <- c("The Pickwick Papers","Oliver Twist",
+           "Nicholas Nickleby","The Old Curiosity Shop",
+           "Barnaby Rudge","Martin Chuzzlewit",
+           "Dombey and Son","David Copperfield",
+           "Bleak House","Hard Times",
+           "Little Dorrit","A Tale of Two Cities",
+           "Great Expectations","Our Mutual Friend",
+           "The Mystery of Edwin Drood")
+books_id = c()
+for(book in books){
+  id <-gutenberg_works(title == book)[[1]]
+  books_id<-c(id,books_id)
+}
+books_tbl <- gutenberg_download(books_id,meta_fields = "title") 
+
+#Number of repetitions of words
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
+ unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+tidytext[1]<-NULL
+tidytext<-tidytext%>%
+  group_by(word)%>%
+  count(word, sort = TRUE)
+tidytext_bar<-head(tidytext,20)
+```
+
+## Most used words
+  you can see them by their number 
+```{r 1_plot, echo=FALSE}
+#draw plot
+ggplot(tidytext_bar,aes(x=word, y=n))+
+  geom_bar(stat="identity",fill="#fbcbc9")+
+  geom_label(aes(label = word))
+```
+##WordCloud
+
+```{r 1_wordcloud, echo=FALSE}
+#wordcloud
+library(devtools) 
+#install_github("lchiffon/wordcloud2")
+library(wordcloud2)
+tidytext_cloud<-head(tidytext,200)
+figPath = system.file('examples/dickens.png', package = 'wordcloud2')
+
+#simple wordcloud
+wordcloud2(data = tidytext_cloud, size = ,color='random-dark')
+
+#wordcloud with pic(it didn't work on my system but i put the code here)
+#wordcloud2(data = tidytext_cloud,figPath=figPath, size = ,color='random-dark')
+
+```
+```{r 2}
+#characters name
+tidy_characters<- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text, title=books_tbl$title) %>%
+  unnest_tokens(word, text,to_lower = FALSE) %>%
+  anti_join(stop_words)%>%
+  group_by(title)%>%
+  count(word, sort = TRUE)
+
+tidytext_name<-tidy_characters%>%
+  filter(str_detect(word,"[A-Z][a-z]+"))
+names<-tidytext_name[[2]] 
+tidytext_word<-tidy_characters%>%
+   filter(str_detect(word,"[A-Za-z]+"))
+words<-tidytext_word[[2]]
+names_table <-unique(names[!str_to_lower(names)%in%words])
+#delete some words manually
+names_table<-as_tibble(names_table [! names_table %in% c("Mr","Mrs","He","She",
+                                                "The","But","It","And","You","We","My","What","No")])
+names(names_table)<-"word"
+names_table<-inner_join(x = tidytext_name, y = names_table, by = "word")
+names(names_table)[1]<-"title_of_book"
+names_table <- names_table[order(names_table$title_of_book,-names_table$n),]
+names_table<-names_table%>%
+  group_by(title_of_book) %>%
+  top_n(n = 5)
+```
+##5 most used names in books
+
+```{r 2_plot, echo=FALSE}
+#get les miserables books
+ggplot(names_table,
+       aes(y = word,x=n,
+           fill = title_of_book
+       )) +
+  geom_bar(stat = "identity")+
+  scale_y_discrete(guide=guide_axis(n.dodge=2))
+```
+```{r 3}
+#get les miserables books 
+books <- c("Les Misérables, v. 1/5: Fantine",
+           "Les Misérables, v. 2/5: Cosette",
+           "Les Misérables, v. 3/5: Marius",
+           "Les Misérables, v. 4/5: The Idyll and the Epic",
+           "Les Misérables, v. 5/5: Jean Valjean")
+books_id = c()
+for(book in books){
+  id <-gutenberg_works(title == book)[[1]]
+  books_id<-c(id,books_id)
+}
+books_tbl <- gutenberg_download(books_id,meta_fields = "title")
+
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+tidytext$id <- seq.int(nrow(tidytext))
+
+#separate book into 200 pieces
+tidytext$group <- as.numeric(cut(tidytext$id, 200))
+
+#find positive and negative words and their numbers
+bing <- get_sentiments("bing")
+pos_neg <-tidytext %>%
+  inner_join(get_sentiments("bing")) %>%
+  group_by(group)%>%
+  count(sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative,
+         negneg=-negative)
+```
+##Emotion bar
+
+```{r 3_plot, echo=FALSE}
+ggplot(pos_neg, aes(x=group)) +
+  geom_bar(stat = "identity",aes(y=positive,fill="positive"))+
+  geom_bar(stat = "identity",aes(y=negneg,fill="negative"))+
+  geom_bar(stat = "identity",aes(y=sentiment,fill="sentiment"))+
+  scale_fill_manual(values = c("#c6d7eb","#fbcbc9","#322514"))+
+  theme_minimal()
+```
+```{r 4}
+
+#tidy words
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
+  unnest_tokens(word, text)
+
+#verbs for women
+women <- tidytext%>%
+  filter((lag(word)=="she"))%>%
+  group_by(word)%>%
+  count()%>%
+  arrange(-n)%>%
+  head(20)%>%
+  mutate(gender="women")
+
+#verbs for men
+men <- tidytext%>%
+  filter((lag(word)=="he"))%>%
+  group_by(word)%>%
+  count()%>%
+  arrange(-n)%>%
+  head(20)%>%
+  mutate(gender="men")
+
+#combine tables
+women_men <- rbind(women, men)
+```
+##Most used verbs by women and men
+
+```{r 4_plot, echo=FALSE}
+#draw plot
+ggplot(women_men,
+       aes(y = n,x=word,
+           fill = gender
+       )) +
+ geom_bar(stat='identity',position = position_dodge(
+    preserve = 'single'
+  ))+  geom_label(aes(label = word),size=2.5)
+```
+```{r 5}
+# download 2 books from Charles Dickens
+books <- c("Oliver Twist","David Copperfield")
+books_id = c()
+for(book in books){
+  id <-gutenberg_works(title == book)[[1]]
+  books_id<-c(id,books_id)
+}
+books_tbl <- gutenberg_download(books_id,meta_fields = "title") 
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
+  unnest_lines(word, text,to_lower = FALSE)
+
+#seperating chapters
+chapters<-books_tbl%>%
+  group_by(title)%>%
+  mutate(chapter = cumsum((str_detect(text, regex("CHAPTER [ILVX]+|CHAPTER [1-9]+"))))
+         )%>%
+  group_by(title,chapter)%>%
+  filter(n()>50)%>%
+  summarise(text = paste0(text, collapse = " "))
+
+#unigram
+unigrams_per_chapter<-chapters%>%
+  unnest_tokens(unigram, text, token = "ngrams", n = 1)%>%
+  group_by(title,chapter)%>%
+  count(unigram)%>%
+  separate(unigram, c("word"), sep = " ")%>%
+  filter(!word %in% stop_words$word)
+
+freq_rank_uni_per_chapter<-unigrams_per_chapter%>%  
+  group_by(title,chapter)%>%
+  arrange(n)%>%
+  mutate(freq=n/n(),rank=last(row_number())-row_number())%>%
+  arrange(title,chapter,rank)
+
+#bigram
+bigrams_per_chapter<-chapters%>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)%>%
+  group_by(title,chapter)%>%
+  count(bigram)%>%
+  separate(bigram, c("word_1", "word_2"), sep = " ")%>%
+  filter(!word_1 %in% stop_words$word) %>%
+  filter(!word_2 %in% stop_words$word)
+
+
+freq_rank_bi_per_chapter<-bigrams_per_chapter%>%  
+  group_by(title,chapter)%>%
+  arrange(n)%>%
+  mutate(freq=n/n(),rank=last(row_number())-row_number())%>%
+  arrange(title,chapter,rank)
+
+freqs_by_chapter<-
+  rbind(freq_rank_bi_per_chapter%>%select(rank,freq,title,chapter)%>%mutate(ngram="bigram"),
+        freq_rank_uni_per_chapter%>%select(rank,freq,title,chapter)%>%mutate(ngram="unigram"))
+
+freqs_by_chapter<-freqs_by_chapter%>%
+  mutate(title=str_trim(title))
+```
+##Unigram vs Bigram (Charles Dickens books)
+```{r 5_plot, echo=FALSE}
+#draw plot
+ggplot(freqs_by_chapter,aes(rank,freq,color=ngram))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~title)
+```
+```{r 6}
+#download Robinson, Frank M books
+books_id<-gutenberg_works(author == 'Robinson, Frank M.')[[1]]
+books_tbl <- gutenberg_download(books_id,meta_fields = "title") 
+tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
+  unnest_lines(word, text,to_lower = FALSE)
+
+#seperate chapters
+chapters<-books_tbl%>%
+  group_by(title)%>%
+  mutate(chapter = cumsum((str_detect(text, regex("CHAPTER [ILVX]+|CHAPTER [1-9]+|^[ILVX]+\\."))))
+  )%>%
+  group_by(title,chapter)%>%
+  filter(n()>50)%>%
+  summarise(text = paste0(text, collapse = " "))
+
+#unigram
+unigrams_per_chapter<-chapters%>%
+  unnest_tokens(unigram, text, token = "ngrams", n = 1)%>%
+  group_by(title,chapter)%>%
+  count(unigram)%>%
+  separate(unigram, c("word"), sep = " ")%>%
+  filter(!word %in% stop_words$word)
+
+freq_rank_uni_per_chapter<-unigrams_per_chapter%>%  
+  group_by(title,chapter)%>%
+  arrange(n)%>%
+  mutate(freq=n/n(),rank=last(row_number())-row_number())%>%
+  arrange(title,chapter,rank)
+
+#bigram
+bigrams_per_chapter<-chapters%>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)%>%
+  group_by(title,chapter)%>%
+  count(bigram)%>%
+  separate(bigram, c("word_1", "word_2"), sep = " ")%>%
+  filter(!word_1 %in% stop_words$word) %>%
+  filter(!word_2 %in% stop_words$word)
+
+
+freq_rank_bi_per_chapter<-bigrams_per_chapter%>%  
+  group_by(title,chapter)%>%
+  arrange(n)%>%
+  mutate(freq=n/n(),rank=last(row_number())-row_number())%>%
+  arrange(title,chapter,rank)
+
+freqs_by_chapter<-
+  rbind(freq_rank_bi_per_chapter%>%select(rank,freq,title,chapter)%>%mutate(ngram="bigram"),
+        freq_rank_uni_per_chapter%>%select(rank,freq,title,chapter)%>%mutate(ngram="unigram"))
+
+freqs_by_chapter<-freqs_by_chapter%>%
+  mutate(title=str_trim(title))
+```
+##Unigram vs Bigram (Robinson, Frank M books)
+```{r 6_plot, echo=FALSE}
+#draw plot
+ggplot(freqs_by_chapter,aes(rank,freq,color=ngram))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  facet_wrap(~title)
+```
+```{r earthquake_1}
+library(lubridate)
+earthquake <- read.csv(file = 'C:/Users/Zahra Salarian/Documents/R/4/iran.csv')
+
+#get big earthquakes that had prequake before them
+inds = which((earthquake$mag>=6)&
+               (day(earthquake$time)==day(lead(earthquake$time,1)))
+             &(lead(earthquake$mag,1)<5))
+rows <- lapply(inds, function(x) x:(x+1))
+earthquake<-earthquake[unlist(rows),]
+earthquake<-earthquake%>%
+  mutate(label = ifelse(earthquake$mag>=6,'main_quake','pre_quake'))
+
+```
+##Big earthquakes that had prequake befor them
+```{r earthquake_1_plot, echo=FALSE}
+ggplot(earthquake,
+       aes(x = mag,y=time,
+           fill = label
+       )) +
+  geom_bar(stat = "identity")
+```
+```{r earthquake_2}
+earthquake <- read.csv(file = 'C:/Users/Zahra Salarian/Documents/R/4/iran.csv')
+#select cities in iran
+earthquake<-earthquake%>%
+  mutate(city =str_match(place, "of\\s*(.*?)\\s*, Iran")[,2])%>%
+  group_by(city)%>%
+  count()%>%
+  #detect the safest cities
+  filter(n <= 2)%>%
+  summarise(city,n)
+earthquake<-earthquake[!(is.na(earthquake$city)),]
+```
+##Safest cities that had earthquake just once
+```{r earthquake_2_plot, echo=FALSE}
+#draw plot of safest cities
+ggplot(earthquake,
+       aes(y = city,x=n,fill=n
+       )) +
+  geom_bar(stat = "identity")+
+  scale_y_discrete(guide=guide_axis(n.dodge=2))
+```
+```{r earthquake_3}
+library(lubridate)
+library(ggplot2)
+library(lubridate)
+earthquake <- read.csv(file = 'C:/Users/Zahra Salarian/Documents/R/4/iran.csv')
+seasons<-earthquake%>%
+    mutate(season = case_when(
+    month(time) %in% 10:12 ~ "FALL" ,
+    month(time) %in%  4:6  ~ "SPRING" ,
+    month(time) %in%  1:3  ~ "WINTER" ,
+    TRUE ~ "SUMMER"))%>%
+  group_by(season)%>%
+  count()
+```
+##Number of earthquakes per season
+```{r earthquake_3_plot, echo=FALSE}
+#draw plot
+ggplot(seasons,
+       aes(x = season,y=n,
+           fill=season
+       )) +
+  geom_bar(stat = "identity")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

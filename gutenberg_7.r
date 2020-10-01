@@ -1,29 +1,21 @@
-#install.packages("gutenbergr")
-#install.packages('ngram')
 library("gutenbergr")
 library(tidytext)
 library(magrittr)
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(stringr)
 
-# download 2 books from Charles Dickens
-books <- c("Oliver Twist","David Copperfield")
-books_id = c()
-for(book in books){
-  id <-gutenberg_works(title == book)[[1]]
-  books_id<-c(id,books_id)
-}
+#download Robinson, Frank M books
+books_id<-gutenberg_works(author == 'Robinson, Frank M.')[[1]]
 books_tbl <- gutenberg_download(books_id,meta_fields = "title") 
 tidytext <- data_frame(line = 1:nrow(books_tbl), text = books_tbl$text) %>%
   unnest_lines(word, text,to_lower = FALSE)
 
-#seperating chapters
+#seperate chapters
 chapters<-books_tbl%>%
   group_by(title)%>%
-  mutate(chapter = cumsum((str_detect(text, regex("CHAPTER [ILVX]+|CHAPTER [1-9]+"))))
-         )%>%
+  mutate(chapter = cumsum((str_detect(text, regex("CHAPTER [ILVX]+|CHAPTER [1-9]+|^[ILVX]+\\."))))
+  )%>%
   group_by(title,chapter)%>%
   filter(n()>50)%>%
   summarise(text = paste0(text, collapse = " "))
