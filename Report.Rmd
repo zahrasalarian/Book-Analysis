@@ -61,7 +61,7 @@ ggplot(tidytext_bar,aes(x=word, y=n))+
   geom_bar(stat="identity",fill="#fbcbc9")+
   geom_label(aes(label = word))
 ```
-##WordCloud
+## WordCloud
 
 ```{r 1_wordcloud, echo=FALSE}
 #wordcloud
@@ -104,7 +104,7 @@ names_table<-names_table%>%
   group_by(title_of_book) %>%
   top_n(n = 5)
 ```
-##5 most used names in books
+## 5 most used names in books
 
 ```{r 2_plot, echo=FALSE}
 #get les miserables books
@@ -147,7 +147,7 @@ pos_neg <-tidytext %>%
   mutate(sentiment = positive - negative,
          negneg=-negative)
 ```
-##Emotion bar
+## Emotion bar
 
 ```{r 3_plot, echo=FALSE}
 ggplot(pos_neg, aes(x=group)) +
@@ -184,7 +184,7 @@ men <- tidytext%>%
 #combine tables
 women_men <- rbind(women, men)
 ```
-##Most used verbs by women and men
+## Most used verbs by women and men
 
 ```{r 4_plot, echo=FALSE}
 #draw plot
@@ -254,7 +254,7 @@ freqs_by_chapter<-
 freqs_by_chapter<-freqs_by_chapter%>%
   mutate(title=str_trim(title))
 ```
-##Unigram vs Bigram (Charles Dickens books)
+## Unigram vs Bigram (Charles Dickens books)
 ```{r 5_plot, echo=FALSE}
 #draw plot
 ggplot(freqs_by_chapter,aes(rank,freq,color=ngram))+
@@ -316,7 +316,7 @@ freqs_by_chapter<-
 freqs_by_chapter<-freqs_by_chapter%>%
   mutate(title=str_trim(title))
 ```
-##Unigram vs Bigram (Robinson, Frank M books)
+## Unigram vs Bigram (Robinson, Frank M books)
 ```{r 6_plot, echo=FALSE}
 #draw plot
 ggplot(freqs_by_chapter,aes(rank,freq,color=ngram))+
@@ -339,7 +339,7 @@ earthquake<-earthquake%>%
   mutate(label = ifelse(earthquake$mag>=6,'main_quake','pre_quake'))
 
 ```
-##Big earthquakes that had prequake befor them
+## Big earthquakes that had prequake befor them
 ```{r earthquake_1_plot, echo=FALSE}
 ggplot(earthquake,
        aes(x = mag,y=time,
@@ -359,7 +359,7 @@ earthquake<-earthquake%>%
   summarise(city,n)
 earthquake<-earthquake[!(is.na(earthquake$city)),]
 ```
-##Safest cities that had earthquake just once
+## Safest cities that had earthquake just once
 ```{r earthquake_2_plot, echo=FALSE}
 #draw plot of safest cities
 ggplot(earthquake,
@@ -382,7 +382,7 @@ seasons<-earthquake%>%
   group_by(season)%>%
   count()
 ```
-##Number of earthquakes per season
+## Number of earthquakes per season
 ```{r earthquake_3_plot, echo=FALSE}
 #draw plot
 ggplot(seasons,
